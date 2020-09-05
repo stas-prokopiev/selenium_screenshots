@@ -1,3 +1,8 @@
+# My
+jupyter/*
+webdrivers/*
+screenshots/*
+
 # Temporary and binary files
 *~
 *.py[cod]
