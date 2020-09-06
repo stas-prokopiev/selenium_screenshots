@@ -20,7 +20,6 @@ class Screenshots(object):
 
     Raises:
         SeleniumScreenshotsError: Main Exception of this python package
-
     """
 
     @char
