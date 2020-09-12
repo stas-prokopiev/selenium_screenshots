@@ -5,9 +5,10 @@ import logging
 # Third party imports
 
 # Local imports
-from selenium_screenshots.main import Screenshots
+from selenium_screenshots.class_screenshots import Screenshots
+from selenium_screenshots.func_screenshot import make_screenshot
 
-__all__ = ["Screenshots"]
+__all__ = ["Screenshots", "make_screenshot"]
 
 
 #####

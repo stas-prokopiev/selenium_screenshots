@@ -4,6 +4,7 @@ import os
 import logging
 
 # Third party imports
+from tqdm import tqdm
 from local_simple_database import LocalSimpleDatabase
 from char import char
 
@@ -55,16 +56,14 @@ class Screenshots(object):
                 str_path_dir_with_screenshots
             )
         self.LSD["int_screenshots_in_the_dir"] = \
-            self._count_number_of_screenshots_in_the_directory()
+            self._count_screenshots_in_the_directory()
 
     @char
-    def create_screenshot(self, str_description="", another_webdriver=None):
+    def create_screenshot(self, str_description=""):
         """Create a new screenshot with given description
 
         Args:
             str_description (str): description to add in the screenshot name.
-            another_webdriver (selenium.webdriver): \
-                If you want to use another webdriver
 
         Raises:
             SeleniumScreenshotsError: Main exception of this python package
@@ -74,15 +73,9 @@ class Screenshots(object):
             self.str_path_dir_with_screenshots, str_filename)
         LOGGER.debug("Create screenshot in path: %s", str_screenshot_path)
         #####
-        # Choose webdriver
-        if another_webdriver is not None:
-            webdriver_to_use = another_webdriver
-        else:
-            webdriver_to_use = self.webdriver
-        #####
         # Try to create screenshot
         try:
-            webdriver_to_use.get_screenshot_as_file(str_screenshot_path)
+            self.webdriver.get_screenshot_as_file(str_screenshot_path)
         except Exception as ex:
             LOGGER.error(
                 "Unable to create screenshot with name: %s", str_filename)
@@ -93,6 +86,82 @@ class Screenshots(object):
         if self.LSD["int_screenshots_in_the_dir"] > \
         self.int_screenshots_to_delete_half:
             self._remove_old_screenshots_if_there_are_too_much()
+
+    @char
+    def delete_all_screenshots(self):
+        """Delete all screenshots in the dir
+        """
+        list_screens_names = self._get_names_of_all_screenshots()
+        LOGGER.info(
+            "Delete all screenshots in the directory: %s",
+            self.str_path_dir_with_screenshots
+        )
+        LOGGER.info("---> Screenshots to delete: %d", len(list_screens_names))
+        self._delete_list_of_screenshots(list_screens_names)
+        # Save new number of screenshots in the dir
+        self._update_number_of_screenshots_in_the_dir()
+
+    @char
+    def delete_not_unique_screenshots(
+            self,
+            is_to_delete_screenshots_without_description=False
+    ):
+        """This method will delete all not unique screenshots in the directory.
+
+        Args:
+            is_to_delete_screenshots_without_description (bool, optional): \
+                Flag if to delete screenshots without description.
+        """
+        list_screens_names = self._get_names_of_all_screenshots()
+        # Save descriptions of screens by name in the dictionary
+        dict_screen_name_by_screen_descr = {}
+        list_screens_without_description = []
+
+        for str_screen_name in list_screens_names:
+            if "_" not in str_screen_name:
+                list_screens_without_description.append(str_screen_name)
+                continue
+            str_screen_descr = str_screen_name.replace(".png", "")
+            # delete screenshot number from screenshot description
+            str_screen_descr = "_".join(str_screen_descr.split("_")[1:])
+            dict_screen_name_by_screen_descr[str_screen_descr] = \
+                str_screen_name
+        # Delete not unique screens
+        set_unique_screens_descr = set(dict_screen_name_by_screen_descr)
+        list_names_unique_screens = [
+            dict_screen_name_by_screen_descr[str_unique_descr]
+            for str_unique_descr in set_unique_screens_descr
+        ]
+        if not is_to_delete_screenshots_without_description:
+            list_names_unique_screens += list_screens_without_description
+        set_screens_names_to_delete = \
+            set(list_screens_names) - set(list_names_unique_screens)
+
+        self._delete_list_of_screenshots(list(set_screens_names_to_delete))
+        # Save new number of screenshots in the dir
+        self._update_number_of_screenshots_in_the_dir()
+
+    @char
+    def _delete_list_of_screenshots(self, list_screenshots_names_to_del):
+        """Delete list of screenshots from the directory
+
+        Args:
+            list_screenshots_names_to_del (list): Names of screenshots
+        """
+        iter_screens_names = list_screenshots_names_to_del
+        if len(list_screenshots_names_to_del) > 1000:
+            iter_screens_names = tqdm(iter_screens_names)
+        for str_screen_name in iter_screens_names:
+            str_screenshot_path = os.path.join(
+                self.str_path_dir_with_screenshots, str_screen_name)
+            if not os.path.exists(str_screenshot_path):
+                continue
+            try:
+                os.remove(str_screenshot_path)
+            except Exception as ex:
+                LOGGER.warning(
+                    "Unable to delete screenshot: %s\n%s",
+                    str_screenshot_path, ex)
 
     @char
     def _create_name_for_screenshot(self, str_description):
@@ -107,8 +176,9 @@ class Screenshots(object):
         # Get number for new screenshot
         int_new_screenshot_num = self.LSD["int_last_screenshot_num"] + 1
         LOGGER.debug("Number for new screenshot: %d", int_new_screenshot_num)
-        str_filename = "{}_{}".format(
-            int_new_screenshot_num, str_description)
+        str_filename = str(int_new_screenshot_num)
+        if str_description:
+            str_filename += "_" + str_description
         # If the filename is too long then cut it
         if len(str_filename) > self.int_max_length_of_filename:
             str_filename = str_filename[:self.int_max_length_of_filename]
@@ -159,8 +229,7 @@ class Screenshots(object):
         LOGGER.info("Were deleted screenshots: %d", int_screens_to_delete)
         #####
         # Save new number of screenshots in the dir
-        list_screens_names = self._get_names_of_all_screenshots()
-        self.LSD["int_screenshots_in_the_dir"] = len(list_screens_names)
+        self._update_number_of_screenshots_in_the_dir()
         return None
 
     def _get_names_of_all_screenshots(self):
@@ -176,10 +245,16 @@ class Screenshots(object):
         ]
         return list_screenshots_names
 
-    def _count_number_of_screenshots_in_the_directory(self):
+    def _count_screenshots_in_the_directory(self):
         """Count number of screenshots in the set directory
 
         Returns:
             int: Number of the screenshots
         """
         return len(self._get_names_of_all_screenshots())
+
+    def _update_number_of_screenshots_in_the_dir(self):
+        """Save new number of the screenshots in the dirs
+        """
+        list_screens_names = self._get_names_of_all_screenshots()
+        self.LSD["int_screenshots_in_the_dir"] = len(list_screens_names)

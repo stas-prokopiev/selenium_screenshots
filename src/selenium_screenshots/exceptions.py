@@ -3,4 +3,3 @@
 class SeleniumScreenshotsError(Exception):
     """Main exception of this python package
     """
-    pass
