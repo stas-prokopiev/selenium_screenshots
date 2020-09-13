@@ -31,7 +31,7 @@ selenium_screenshots
 
 Short Overview.
 =========================
-selenium_screenshots is a python package that helps in creating many screenshots for selenium webdrivers.
+selenium_screenshots is a python package that helps to create many screenshots for selenium webdrivers.
 
 Example
 ------------------------------
@@ -46,7 +46,7 @@ Example
     make_screenshot(driver, "some_description")
     make_screenshot(driver, "characters_%%forbidden_in_the_..filename")
 
-As the result you will get screenshots in the directory: ./screenshots/...
+As the result you will get screenshots in the directory: **./screenshots/...**
 
 - 1.png
 - 2_some_description.png
@@ -90,7 +90,7 @@ Arguments
 ^^^^^^^^^^^^^^
 
 #. **webdriver**:
-    The only mandatary argument. Any selenium webdriver which to use for making of screenshots.
+    The only mandatary argument. Any selenium webdriver which to use for making of screenshot.
 #. **str_description=""**:
     | Description of the screenshot to add to the screenshot filename.
     | If in the screenshot description will be used symbols forbidden in the filenames they will be replaced on "_".
@@ -104,7 +104,8 @@ Advanced Usage
 **selenium_screenshots.Screenshots(...)**
 --------------------------------------------------------------------------------------------------
 
-Firstly, you have to define **screenshots_handler** to be able handle created screenshots.
+| Firstly, you have to define an object of class Screenshots to be able to handle screenshots.
+| This object will be named **screenshots_handler** in the code below.
 
 .. code-block:: python
 
@@ -129,7 +130,8 @@ Arguments
 #. **int_screenshots_to_delete_half=9999**:
     Number of the screenshots in the directory when try to delete most old half
 #. **int_max_length_of_filename=50**:
-    Max length of new screenshot filename If filename of a new screenshot is longer then filename will be cut.
+    | Max length of a new screenshot filename.
+    | If filename of a new screenshot is longer then filename will be cut.
 
 Methods of **screenshots_handler** object
 --------------------------------------------------------------------------------------------------
@@ -145,7 +147,7 @@ This method do exactly the same as **selenium_screenshots.make_screenshot(...)**
 
 #. **str_description=""**:
     | Description of the screenshot to add to the screenshot filename.
-    | If in the screenshot description will be used symbols forbidden in the filenames they will be replaced on "_".
+    | If in the screenshot description is used symbols forbidden in the filenames they will be replaced on "_".
     | If filename of a new screenshot is longer than N symbols then it will be cut to N.
 
 screenshots_handler.delete_all_screenshots(...)
